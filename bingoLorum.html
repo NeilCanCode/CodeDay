@@ -189,6 +189,7 @@
         let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0; // High score from localStorage
         const minWords = 20; // Minimum words at level 1
         const wordsPerLevel = 20; // Increase word count by this amount each level
+        let matchedWords = []; // Array to keep track of matched words
     
         // Shuffle function to randomize array
         function shuffle(array) {
@@ -218,9 +219,14 @@
             }
     
             paragraph = paragraph.slice(0, wordCount);
-            selectedLoremWord = shuffle([...bingoWords])[0];
-            const randomIndex = Math.floor(Math.random() * paragraph.length);
-            paragraph.splice(randomIndex, 0, selectedLoremWord);
+    
+            // Select a random Lorem word that hasn't been matched yet
+            const availableWords = bingoWords.filter(word => !matchedWords.includes(word));
+            if (availableWords.length > 0) {
+                selectedLoremWord = shuffle(availableWords)[0];
+                const randomIndex = Math.floor(Math.random() * paragraph.length);
+                paragraph.splice(randomIndex, 0, selectedLoremWord);
+            }
     
             return paragraph.join(' ');
         }
@@ -260,6 +266,7 @@
                 const matchedBingoCell = document.getElementById('bingo-' + clickedWord);
                 if (matchedBingoCell) {
                     matchedBingoCell.classList.add('matched');
+                    matchedWords.push(clickedWord); // Add the matched word to the list
                 }
                 element.classList.add('correct');
                 document.getElementById('next-level').style.display = 'block';
@@ -314,6 +321,7 @@
             closeModal();
             currentLevel = 1;
             score = 0;
+            matchedWords = []; // Reset matched words
             updateHighScore();
             document.getElementById('level').innerText = 'Level: ' + currentLevel;
             resetGame();
@@ -344,7 +352,64 @@
         }
     
         window.onload = init; // Start the game when the page loads
+        // Populate the Bingo grid
+function populateBingoGrid() {
+    const bingoGrid = document.getElementById('bingo-grid');
+    bingoGrid.innerHTML = '';
+
+    bingoWords.forEach(bingoWord => {
+        const bingoCell = document.createElement('div');
+        bingoCell.innerText = bingoWord;
+        bingoCell.id = 'bingo-' + bingoWord;
+
+        // If the word has been matched, apply the matched class
+        if (matchedWords.includes(bingoWord)) {
+            bingoCell.classList.add('matched');
+        }
+
+        bingoGrid.appendChild(bingoCell);
+    });
+}
+
+// Check if the clicked word matches
+function checkWordMatch(clickedWord, element) {
+    if (clickedWord === selectedLoremWord) {
+        const matchedBingoCell = document.getElementById('bingo-' + clickedWord);
+        if (matchedBingoCell) {
+            matchedBingoCell.classList.add('matched');
+            matchedWords.push(clickedWord); // Add the matched word to the list if it wasn't already
+        }
+        element.classList.add('correct');
+        document.getElementById('next-level').style.display = 'block';
+        score += 10;
+        updateHighScore();
+    } else {
+        showModal();
+    }
+}
+
+    // Reset the game to Level 1
+    function resetToLevelOne() {
+        closeModal();
+        currentLevel = 1;
+        score = 0;
+        matchedWords = []; // Reset matched words
+        updateHighScore();
+        document.getElementById('level').innerText = 'Level: ' + currentLevel;
+        resetGame();
+    }
+
+    // Reset the game for the next level
+    function resetGame() {
+        populateBingoGrid(); // Update Bingo grid to reflect matched words
+        populateLorem();
+        document.getElementById('timer').innerText = '10s';
+        document.getElementById('next-level').style.display = 'none';
+        startTimer(); // Restart the timer
+    }
+
     </script>
+    
     
     
 </body>
