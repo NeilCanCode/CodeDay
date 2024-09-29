@@ -106,6 +106,43 @@
             background-color: #45a049;
         }
 
+        /* Popup Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            padding-top: 60px; /* Place content 60px from the top */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
         #high-score {
             font-size: 1.5rem;
             margin-top: 20px;
@@ -132,19 +169,27 @@
         <button id="next-level" onclick="nextLevel()">Next Level</button>
     </div>
 
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p>Time's up! You did not find the word in time.</p>
+            <button onclick="resetToLevelOne()">Try Again</button>
+        </div>
+    </div>
+
     <script>
         // Bingo words to be matched
         const bingoWords = ['lorem', 'ipsum', 'dolor', 'amet', 'consectetur', 'adipiscing', 'elit', 'facilisi', 'labore', 'dolore'];
-
+    
         let currentLevel = 1;
         let selectedLoremWord = '';
         let timerInterval;
         let score = 0; // Score variable
         let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0; // High score from localStorage
         const minWords = 20; // Minimum words at level 1
-        const maxWords = 100; // Maximum words at level 5
         const wordsPerLevel = 20; // Increase word count by this amount each level
-
+    
         // Shuffle function to randomize array
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -153,10 +198,9 @@
             }
             return array;
         }
-
+    
         // Generate random meaningful sentences
         function generateMeaningfulParagraph(wordCount) {
-            // Some sample phrases (these can be expanded or customized)
             const phrases = [
                 'The quick brown fox jumps over the lazy dog',
                 'A journey of a thousand miles begins with a single step',
@@ -166,48 +210,40 @@
                 'Patience is not simply the ability to wait. It’s how we behave while we are waiting',
                 'Dreams are the seeds of change. Nothing ever grows without a seed, and nothing ever changes without a dream'
             ];
-
-            // Select random phrases until reaching the desired word count
+    
             let paragraph = [];
             while (paragraph.length < wordCount) {
                 let randomPhrase = phrases[Math.floor(Math.random() * phrases.length)].split(' ');
                 paragraph = paragraph.concat(randomPhrase);
             }
-
-            // Truncate if it's longer than the requested word count
+    
             paragraph = paragraph.slice(0, wordCount);
-
-            // Insert a single Lorem word at a random position
             selectedLoremWord = shuffle([...bingoWords])[0];
             const randomIndex = Math.floor(Math.random() * paragraph.length);
             paragraph.splice(randomIndex, 0, selectedLoremWord);
-
+    
             return paragraph.join(' ');
         }
-
-        // Populate the Bingo grid with consistent Bingo words at the start
+    
+        // Populate the Bingo grid
         function populateBingoGrid() {
             const bingoGrid = document.getElementById('bingo-grid');
-            bingoGrid.innerHTML = ''; // Clear the grid
-
-            // Populate Bingo card with consistent words
+            bingoGrid.innerHTML = '';
+    
             bingoWords.forEach(bingoWord => {
                 const bingoCell = document.createElement('div');
                 bingoCell.innerText = bingoWord;
-                bingoCell.id = 'bingo-' + bingoWord; // Assign id for later reference
+                bingoCell.id = 'bingo-' + bingoWord;
                 bingoGrid.appendChild(bingoCell);
             });
         }
-
-        // Populate the Lorem Ipsum description with one Lorem word in a meaningful paragraph
+    
+        // Populate the Lorem Ipsum description
         function populateLorem() {
             const descriptionElement = document.getElementById('lorem-description');
-
-            // Generate the paragraph with an increasing number of words based on the level
             const paragraph = generateMeaningfulParagraph(minWords + (currentLevel - 1) * wordsPerLevel);
-            descriptionElement.innerHTML = ''; // Clear existing paragraph
-
-            // Add the paragraph word by word with event listeners for each word
+            descriptionElement.innerHTML = '';
+    
             paragraph.split(' ').forEach(word => {
                 const span = document.createElement('span');
                 span.innerText = word + ' ';
@@ -217,57 +253,72 @@
                 descriptionElement.appendChild(span);
             });
         }
-
-        // Check if the clicked word matches the selected Lorem word
+    
+        // Check if the clicked word matches
         function checkWordMatch(clickedWord, element) {
             if (clickedWord === selectedLoremWord) {
                 const matchedBingoCell = document.getElementById('bingo-' + clickedWord);
                 if (matchedBingoCell) {
-                    matchedBingoCell.classList.add('matched'); // Mark Bingo word
+                    matchedBingoCell.classList.add('matched');
                 }
-                element.classList.add('correct'); // Highlight the correct word
-                document.getElementById('next-level').style.display = 'block'; // Show next level button
-                score += 10; // Increment score
+                element.classList.add('correct');
+                document.getElementById('next-level').style.display = 'block';
+                score += 10;
                 updateHighScore();
             } else {
-                resetToLevelOne(); // Reset to Level 1 if wrong word is clicked
+                showModal();
             }
         }
-
-        // Update and display high score
+    
+        // Update high score
         function updateHighScore() {
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem('highScore', highScore); // Save to localStorage
+                localStorage.setItem('highScore', highScore);
             }
             document.getElementById('high-score').innerText = 'High Score: ' + highScore;
         }
-
+    
         // Start the timer
         function startTimer() {
-            let timeLeft = 10; // Reset timer for each level
+            let timeLeft = 10;
             const timerDisplay = document.getElementById('timer');
-
+    
+            timerDisplay.innerText = timeLeft + 's';
+    
             timerInterval = setInterval(() => {
+                timeLeft -= 1;
+                timerDisplay.innerText = timeLeft + 's';
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    resetToLevelOne(); // Reset to Level 1 when time runs out
-                } else {
-                    timerDisplay.innerText = timeLeft + 's';
-                    timeLeft -= 1;
+                    showModal();
                 }
             }, 1000);
         }
-
-        // Reset the game to Level 1 after an error (for Try Again)
+    
+        // Show the modal when time runs out
+        function showModal() {
+            const modal = document.getElementById('myModal');
+            modal.style.display = 'block';
+            clearInterval(timerInterval); // Stop the timer
+        }
+    
+        // Close the modal and reset the game
+        function closeModal() {
+            const modal = document.getElementById('myModal');
+            modal.style.display = 'none';
+        }
+    
+        // Reset the game to Level 1
         function resetToLevelOne() {
-            currentLevel = 1; // Reset to Level 1
-            score = 0; // Reset score
-            updateHighScore(); // Update high score display
+            closeModal();
+            currentLevel = 1;
+            score = 0;
+            updateHighScore();
             document.getElementById('level').innerText = 'Level: ' + currentLevel;
             resetGame();
         }
-
+    
         // Reset the game for the next level
         function resetGame() {
             populateBingoGrid();
@@ -276,22 +327,25 @@
             document.getElementById('next-level').style.display = 'none';
             startTimer(); // Restart the timer
         }
-
+    
         // Proceed to the next level
         function nextLevel() {
+            clearInterval(timerInterval); // Stop current timer
             currentLevel += 1;
             document.getElementById('level').innerText = 'Level: ' + currentLevel;
-            resetGame(); // Reset for next level
+            resetGame(); // Reset for the next level
         }
-
+    
         // Initialize the game
         function init() {
             populateBingoGrid();
             populateLorem();
             startTimer();
         }
-
+    
         window.onload = init; // Start the game when the page loads
     </script>
+    
+    
 </body>
 </html>
