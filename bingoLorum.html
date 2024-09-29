@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LorumBingo - Multi-Level</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #d7f7c5; /* light green background */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin: 30px auto;
+            width: 80%;
+        }
+
+        #logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .timer {
+            background-color: #ffcccc;
+            color: red;
+            border-radius: 20px;
+            padding: 10px;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 1.5rem;
+        }
+
+        .description {
+            background-color: white;
+            border-radius: 25px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 700px;
+            font-size: 1.2rem;
+            color: #333;
+            text-align: justify;
+            word-wrap: break-word;
+        }
+
+        .bingo-grid {
+            background-color: #4CAF50; /* Darker green */
+            padding: 20px;
+            border-radius: 25px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .bingo-grid div {
+            background-color: white;
+            color: black;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .bingo-grid div.matched {
+            background-color: lightgray;
+            text-decoration: line-through;
+        }
+
+        .description span {
+            cursor: pointer;
+        }
+
+        .description span.correct {
+            background-color: yellow;
+        }
+
+        .level {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px;
+        }
+
+        #next-level {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        #next-level:hover {
+            background-color: #45a049;
+        }
+
+        /* Popup Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            padding-top: 60px; /* Place content 60px from the top */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #high-score {
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img id="logo" src="Group 5.svg" alt="Logo">
+        <h1>LorumBingo</h1>
+        <div id="timer" class="timer">10s</div>
+        <div id="level" class="level">Level: 1</div>
+        <div id="high-score" class="level">High Score: 0</div>
+
+        <div id="lorem-description" class="description">
+            <!-- The meaningful sentence with one Lorem word will be inserted here -->
+        </div>
+
+        <div id="bingo-grid" class="bingo-grid">
+            <!-- Randomized Bingo words will be inserted here -->
+        </div>
+
+        <button id="next-level" onclick="nextLevel()">Next Level</button>
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p>Time's up! You did not find the word in time.</p>
+            <button onclick="resetToLevelOne()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Bingo words to be matched
+        const bingoWords = ['lorem', 'ipsum', 'dolor', 'amet', 'consectetur', 'adipiscing', 'elit', 'facilisi', 'labore', 'dolore'];
+
+        let currentLevel = 1;
+        let selectedLoremWord = '';
+        let timerInterval;
+        let score = 0; // Score variable
+        let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0; // High score from localStorage
+        const minWords = 20; // Minimum words at level 1
+        const maxWords = 100; // Maximum words at level 5
+        const wordsPerLevel = 20; // Increase word count by this amount each level
+
+        // Shuffle function to randomize array
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Generate random meaningful sentences
+        function generateMeaningfulParagraph(wordCount) {
+            // Some sample phrases (these can be expanded or customized)
+            const phrases = [
+                'The quick brown fox jumps over the lazy dog',
+                'A journey of a thousand miles begins with a single step',
+                'Success is not the key to happiness. Happiness is the key to success',
+                'In the middle of difficulty lies opportunity',
+                'The only limit to our realization of tomorrow is our doubts of today',
+                'Patience is not simply the ability to wait. It’s how we behave while we are waiting',
+                'Dreams are the seeds of change. Nothing ever grows without a seed, and nothing ever changes without a dream'
+            ];
+
+            // Select random phrases until reaching the desired word count
+            let paragraph = [];
+            while (paragraph.length < wordCount) {
+                let randomPhrase = phrases[Math.floor(Math.random() * phrases.length)].split(' ');
+                paragraph = paragraph.concat(randomPhrase);
+            }
+
+            // Truncate if it's longer than the requested word count
+            paragraph = paragraph.slice(0, wordCount);
+
+            // Insert a single Lorem word at a random position
+            selectedLoremWord = shuffle([...bingoWords])[0];
+            const randomIndex = Math.floor(Math.random() * paragraph.length);
+            paragraph.splice(randomIndex, 0, selectedLoremWord);
+
+            return paragraph.join(' ');
+        }
+
+        // Populate the Bingo grid with consistent Bingo words at the start
+        function populateBingoGrid() {
+            const bingoGrid = document.getElementById('bingo-grid');
+            bingoGrid.innerHTML = ''; // Clear the grid
+
+            // Populate Bingo card with consistent words
+            bingoWords.forEach(bingoWord => {
+                const bingoCell = document.createElement('div');
+                bingoCell.innerText = bingoWord;
+                bingoCell.id = 'bingo-' + bingoWord; // Assign id for later reference
+                bingoGrid.appendChild(bingoCell);
+            });
+        }
+
+        // Populate the Lorem Ipsum description with one Lorem word in a meaningful paragraph
+        function populateLorem() {
+            const descriptionElement = document.getElementById('lorem-description');
+
+            // Generate the paragraph with an increasing number of words based on the level
+            const paragraph = generateMeaningfulParagraph(minWords + (currentLevel - 1) * wordsPerLevel);
+            descriptionElement.innerHTML = ''; // Clear existing paragraph
+
+            // Add the paragraph word by word with event listeners for each word
+            paragraph.split(' ').forEach(word => {
+                const span = document.createElement('span');
+                span.innerText = word + ' ';
+                span.addEventListener('click', () => {
+                    checkWordMatch(word, span);
+                });
+                descriptionElement.appendChild(span);
+            });
+        }
+
+        // Check if the clicked word matches the selected Lorem word
+        function checkWordMatch(clickedWord, element) {
+            if (clickedWord === selectedLoremWord) {
+                const matchedBingoCell = document.getElementById('bingo-' + clickedWord);
+                if (matchedBingoCell) {
+                    matchedBingoCell.classList.add('matched'); // Mark Bingo word
+                }
+                element.classList.add('correct'); // Highlight the correct word
+                document.getElementById('next-level').style.display = 'block'; // Show next level button
+                score += 10; // Increment score
+                updateHighScore();
+            } else {
+                showModal(); // If wrong word, show modal and reset
+            }
+        }
+
+        // Update and display high score
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore); // Save to localStorage
+            }
+            document.getElementById('high-score').innerText = 'High Score: ' + highScore;
+        }
+
+        // Start the timer
+        function startTimer() {
+            let timeLeft = 10; // Reset timer for each level
+            const timerDisplay = document.getElementById('timer');
+
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showModal(); // Show modal when time runs out
+                } else {
+                    timerDisplay.innerText = timeLeft + 's';
+                    timeLeft -= 1;
+                }
+            }, 1000);
+        }
+
+        // Show the modal when time runs out
+        function showModal() {
+            const modal = document.getElementById('myModal');
+            modal.style.display = 'block';
+            clearInterval(timerInterval); // Stop the timer when modal appears
+        }
+
+        // Close the modal and reset the game
+        function closeModal() {
+            const modal = document.getElementById('myModal');
+            modal.style.display = 'none';
+        }
+
+        // Reset the game to Level 1 after an error (for Try Again)
+        function resetToLevelOne() {
+            closeModal(); // Close the modal
+            currentLevel = 1; // Reset to Level 1
+            score = 0; // Reset score
+            updateHighScore(); // Update high score display
+            document.getElementById('level').innerText = 'Level: ' + currentLevel;
+            resetGame();
+        }
+
+        // Reset the game for the next level
+        function resetGame() {
+            populateBingoGrid();
+            populateLorem();
+            document.getElementById('timer').innerText = '10s';
+            document.getElementById('next-level').style.display = 'none';
+            startTimer(); // Restart the timer
+        }
+
+        // Proceed to the next level
+        function nextLevel() {
+            currentLevel += 1;
+            document.getElementById('level').innerText = 'Level: ' + currentLevel;
+            resetGame(); // Reset for next level
+        }
+
+        // Initialize the game
+        function init() {
+            populateBingoGrid();
+            populateLorem();
+            startTimer();
+        }
+
+        window.onload = init; // Start the game when the page loads
+    </script>
+</body>
+</html>

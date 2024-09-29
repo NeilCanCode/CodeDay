@@ -1,0 +1,37 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0; /* Light gray background */
+}
+
+#game-area {
+    position: relative;
+    width: 800px; /* Adjust width as needed */
+    height: 600px; /* Adjust height as needed */
+    border: 2px solid #000; /* Black border */
+    background-color: #fff; /* White background for maze area */
+    overflow: hidden;
+}
+
+.wall {
+    position: absolute;
+    background-color: #000; /* Black for walls */
+}
+
+.flag {
+    position: absolute;
+    background-color: red; /* Red for flags */
+    border-radius: 50%; /* Make flags circular */
+}
+
+.player {
+    position: absolute;
+    background-color: blue; /* Blue for player */
+    width: 30px; /* Player size */
+    height: 30px; /* Player size */
+    border-radius: 50%; /* Make player circular */
+}

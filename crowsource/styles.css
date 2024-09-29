@@ -1,0 +1,89 @@
+body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(135deg, #f0e68a, #f0f3f4);
+    color: #333;
+    padding: 20px;
+    margin: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    text-align: center;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+
+.container:hover {
+    transform: scale(1.02);
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #007BFF;
+}
+
+.description {
+    font-size: 1.1em;
+    margin: 15px 0;
+    color: #555;
+    line-height: 1.4;
+}
+
+#prompt {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    font-style: italic;
+    color: #555;
+}
+
+#story-container {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    padding: 15px;
+    border: 2px dashed #007BFF;
+    border-radius: 10px;
+    min-height: 120px;
+    background: #e9f5ff;
+    transition: background 0.3s;
+}
+
+#story-container:hover {
+    background: #d0ebff;
+}
+
+textarea {
+    width: 100%;
+    height: 80px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1em;
+}
+
+button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.3s, transform 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+#feedback {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #28a745;
+}
